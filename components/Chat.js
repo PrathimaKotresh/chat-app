@@ -52,10 +52,13 @@ export default class Chat extends React.Component {
     this.props.navigation.setOptions({ title: name });
     NetInfo.fetch().then(connection => {
       if (connection.isConnected) {
-        console.log('online');
         this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
           if (!user) {
-            await firebase.auth().signInAnonymously();
+            try {
+              await firebase.auth().signInAnonymously();
+            } catch (error) {
+              console.log(`Sign in failed: ${error.message}`);
+            }
           }
 
           //update user state with currently active user data
@@ -75,7 +78,6 @@ export default class Chat extends React.Component {
             .onSnapshot(this.onCollectionUpdate);
         });
       } else {
-        console.log('offline');
         this.setState({
           isConnected: false,
         });
@@ -197,9 +199,7 @@ export default class Chat extends React.Component {
   };
 
   // function to render CustomActions
-  renderCustomActions = (props) => {
-    return <CustomActions {...props} />;
-  };
+  renderCustomActions = (props) => <CustomActions {...props} />;
 
   // function to check if currentMessage contains location data and render map view
   renderCustomView(props) {
