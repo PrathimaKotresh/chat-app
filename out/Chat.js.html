@@ -1,36 +1,44 @@
-/* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable class-methods-use-this */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable react/no-unused-state */
-/* eslint linebreak-style: ["error", "windows"] */
-/* eslint-disable react/jsx-filename-extension */
-/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
-import React from 'react';
-import PropTypes from 'prop-types';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Chat.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Chat.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
-import MapView from 'react-native-maps';
-import {
-  View,
-  StyleSheet,
-  Platform,
-  KeyboardAvoidingView,
-  AsyncStorage,
-} from 'react-native';
+import { View, StyleSheet, Platform, KeyboardAvoidingView, AsyncStorage } from 'react-native';
 import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
 
 const firebase = require('firebase');
 require('firebase/firestore');
 
-// styling
-const styles = StyleSheet.create({
-  chatBackground: {
-    flex: 1,
-  },
-});
-
 // chat screen component
 export default class Chat extends React.Component {
+
   // initialization state message to send, receive, and display messages
   constructor() {
     super();
@@ -45,18 +53,18 @@ export default class Chat extends React.Component {
       isConnected: false,
       image: null,
       location: null,
-    };
+    }
 
     if (!firebase.apps.length) {
       // web app's Firebase configuration
-      const firebaseConfig = {
-        apiKey: 'AIzaSyCQnKQuuwRa_Wt88zbS8u9tg-snsXBgkLM',
-        authDomain: 'chat-app-28cb2.firebaseapp.com',
-        projectId: 'chat-app-28cb2',
-        storageBucket: 'chat-app-28cb2.appspot.com',
-        messagingSenderId: '825446560935',
-        appId: '1:825446560935:web:3068f129e281b86d601782',
-        measurementId: 'G-X3G3H4TJDW',
+      var firebaseConfig = {
+        apiKey: "AIzaSyCQnKQuuwRa_Wt88zbS8u9tg-snsXBgkLM",
+        authDomain: "chat-app-28cb2.firebaseapp.com",
+        projectId: "chat-app-28cb2",
+        storageBucket: "chat-app-28cb2.appspot.com",
+        messagingSenderId: "825446560935",
+        appId: "1:825446560935:web:3068f129e281b86d601782",
+        measurementId: "G-X3G3H4TJDW"
       };
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
@@ -67,27 +75,26 @@ export default class Chat extends React.Component {
 
   // upon loading the app
   componentDidMount() {
-    const { route, navigation } = this.props;
-    const { name } = route.params;
+    let { name } = this.props.route.params;
     // set screen title
-    navigation.setOptions({ title: name });
-    NetInfo.fetch().then((connection) => {
+    this.props.navigation.setOptions({ title: name });
+    NetInfo.fetch().then(connection => {
       if (connection.isConnected) {
         this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
           if (!user) {
             try {
               await firebase.auth().signInAnonymously();
             } catch (error) {
-              console.error(`Sign in failed: ${error.message}`);
+              console.log(`Sign in failed: ${error.message}`);
             }
           }
 
-          // update user state with currently active user data
+          //update user state with currently active user data
           this.setState({
             user: {
               _id: user.uid,
               name,
-              avatar: 'https://placeimg.com/140/140/any',
+              avatar: "https://placeimg.com/140/140/any",
             },
             loggedInText: `${name} has entered the chat`,
             isConnected: true,
@@ -95,7 +102,7 @@ export default class Chat extends React.Component {
 
           // observer to create an updated snapshot of the collection
           this.unsubscribe = this.referenceMessages
-            .orderBy('createdAt', 'desc')
+            .orderBy("createdAt", "desc")
             .onSnapshot(this.onCollectionUpdate);
         });
       } else {
@@ -113,8 +120,7 @@ export default class Chat extends React.Component {
   }
 
   /**
-  * update message state with recent data from database and
-  * param querySnapshot contains documents with the following params
+  * update message state with recent data from database and param querySnapshot contains documents with the following params
   * @function onCollectionUpdate
   * @param {string} _id - message id
   * @param {string} text - content
@@ -148,6 +154,40 @@ export default class Chat extends React.Component {
   };
 
   /**
+  * loads all messages from AsyncStorage
+  * @async
+  * @function getMessages
+  * @return {Promise&lt;string>} The data from the storage
+  */
+  getMessages = async () => {
+    let messages = '';
+    try {
+      messages = await AsyncStorage.getItem('messages') || [];
+      this.setState({
+        messages: JSON.parse(messages)
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  /**
+  * adds message to Firestore database
+  * @function addMessage
+  */
+  addMessages = () => {
+    const message = this.state.messages[0];
+    this.referenceMessages.add({
+      _id: message._id,
+      text: message.text || "",
+      createdAt: message.createdAt,
+      user: message.user,
+      image: message.image || '',
+      location: message.location || null,
+    });
+  };
+
+  /**
   * sends a message to append the messages
   * @async
   * @function onSend
@@ -161,44 +201,9 @@ export default class Chat extends React.Component {
       () => {
         this.addMessages();
         this.saveMessages();
-      },
+      }
     );
   }
-
-  /**
-  * loads all messages from AsyncStorage
-  * @async
-  * @function getMessages
-  * @return {Promise<string>} The data from the storage
-  */
-  getMessages = async () => {
-    let messages = '';
-    try {
-      messages = await AsyncStorage.getItem('messages') || [];
-      this.setState({
-        messages: JSON.parse(messages),
-      });
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
-
-  /**
-  * adds message to Firestore database
-  * @function addMessage
-  */
-  addMessages = () => {
-    const { messages } = this.state;
-    const message = messages[0];
-    this.referenceMessages.add({
-      _id: message._id,
-      text: message.text || '',
-      createdAt: message.createdAt,
-      user: message.user,
-      image: message.image || '',
-      location: message.location || null,
-    });
-  };
 
   /**
   * save all messages to AsyncStorage
@@ -207,10 +212,9 @@ export default class Chat extends React.Component {
   */
   saveMessages = async () => {
     try {
-      const { messages } = this.state;
-      await AsyncStorage.setItem('messages', JSON.stringify(messages));
+      await AsyncStorage.setItem('messages', JSON.stringify(this.state.messages));
     } catch (error) {
-      console.error(error.message);
+      console.log(error.message);
     }
   }
 
@@ -224,10 +228,10 @@ export default class Chat extends React.Component {
     try {
       await AsyncStorage.removeItem('messages');
       this.setState({
-        messages: [],
-      });
+        messages: []
+      })
     } catch (error) {
-      console.error(error.message);
+      console.log(error.message);
     }
   }
 
@@ -238,15 +242,15 @@ export default class Chat extends React.Component {
   */
   renderBubble(props) {
     return (
-      <Bubble
+      &lt;Bubble
         {...props}
         wrapperStyle={{
           right: {
-            backgroundColor: '#000',
-          },
+            backgroundColor: '#000'
+          }
         }}
       />
-    );
+    )
   }
 
   /**
@@ -256,11 +260,10 @@ export default class Chat extends React.Component {
   * @returns {InputToolbar}
   */
   renderInputToolbar = (props) => {
-    const { isConnected } = this.state;
-    if (isConnected === true) {
-      return <InputToolbar {...props} />;
+    if (this.state.isConnected === false) {
+    } else {
+      return &lt;InputToolbar {...props} />;
     }
-    return null;
   };
 
   /**
@@ -269,7 +272,7 @@ export default class Chat extends React.Component {
   * @param {*} props
   * @returns {CustomActions}
   */
-  renderCustomActions = (props) => <CustomActions {...props} />;
+  renderCustomActions = (props) => &lt;CustomActions {...props} />;
 
   /**
   * to check if currentMessage contains location data and render map view
@@ -281,12 +284,12 @@ export default class Chat extends React.Component {
     const { currentMessage } = props;
     if (currentMessage.location) {
       return (
-        <MapView
+        &lt;MapView
           style={{
             width: 150,
             height: 100,
             borderRadius: 13,
-            margin: 3,
+            margin: 3
           }}
           region={{
             latitude: currentMessage.location.latitude,
@@ -301,47 +304,60 @@ export default class Chat extends React.Component {
   }
 
   render() {
-    const { route } = this.props;
-    const { backgroundColor } = route.params;
-    const { image, messages, user } = this.state;
+    let { backgroundColor } = this.props.route.params;
 
     return (
       // set chat screen background color
-      <View style={[styles.chatBackground, { backgroundColor }]}>
-        {image && (
-          // eslint-disable-next-line react/jsx-no-undef
-          <Image
-            source={{ uri: image.uri }}
+      &lt;View style={[styles.chatBackground, { backgroundColor }]}>
+        {this.state.image &amp;&amp; (
+          &lt;Image
+            source={{ uri: this.state.image.uri }}
             style={{ width: 200, height: 200 }}
           />
         )}
         {/* chat interface */}
-        <GiftedChat
-          renderBubble={this.renderBubble(this)}
-          renderInputToolbar={this.renderInputToolbar(this)}
-          renderActions={this.renderCustomActions(this)}
-          renderCustomView={this.renderCustomView(this)}
-          messages={messages}
-          image={image}
-          onSend={(messagesToSend) => this.onSend(messagesToSend)}
-          user={user}
+        &lt;GiftedChat
+          renderBubble={this.renderBubble.bind(this)}
+          renderInputToolbar={this.renderInputToolbar.bind(this)}
+          renderActions={this.renderCustomActions.bind(this)}
+          renderCustomView={this.renderCustomView.bind(this)}
+          messages={this.state.messages}
+          image={this.state.image}
+          onSend={messages => this.onSend(messages)}
+          user={this.state.user}
         />
         {/* keyboard out of position fix on Android */}
-        {Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
-      </View>
+        {Platform.OS === 'android' ? &lt;KeyboardAvoidingView behavior="height" /> : null}
+      &lt;/View>
     );
-  }
+  };
 }
 
-Chat.propTypes = {
-  navigation: PropTypes.shape({
-    navigate: PropTypes.func.isRequired,
-    setOptions: PropTypes.func.isRequired,
-  }).isRequired,
-  route: PropTypes.shape({
-    params: PropTypes.shape({
-      name: PropTypes.string,
-      backgroundColor: PropTypes.string,
-    }).isRequired,
-  }).isRequired,
-};
+// styling
+const styles = StyleSheet.create({
+  chatBackground: {
+    flex: 1,
+  },
+});</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#addMessage">addMessage</a></li><li><a href="global.html#deleteMessages">deleteMessages</a></li><li><a href="global.html#getLocation">getLocation</a></li><li><a href="global.html#getMessages">getMessages</a></li><li><a href="global.html#onActionPress">onActionPress</a></li><li><a href="global.html#onCollectionUpdate">onCollectionUpdate</a></li><li><a href="global.html#onSend">onSend</a></li><li><a href="global.html#pickImage">pickImage</a></li><li><a href="global.html#renderBubble">renderBubble</a></li><li><a href="global.html#renderCustomActions">renderCustomActions</a></li><li><a href="global.html#renderCustomView">renderCustomView</a></li><li><a href="global.html#renderInputToolbar">renderInputToolbar</a></li><li><a href="global.html#saveMessages">saveMessages</a></li><li><a href="global.html#takePhoto">takePhoto</a></li><li><a href="global.html#uploadImage">uploadImage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Sun Dec 13 2020 19:19:54 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

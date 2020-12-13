@@ -1,7 +1,32 @@
-/* eslint linebreak-style: ["error", "windows"] */
-/* eslint-disable react/jsx-filename-extension */
-/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
-import PropTypes from 'prop-types';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: CustomActions.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: CustomActions.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import PropTypes from 'prop-types';
 import React from 'react';
 import {
   StyleSheet, Text, TouchableOpacity, View,
@@ -11,29 +36,11 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import firebase from 'firebase';
 
-const styles = StyleSheet.create({
-  container: {
-    width: 26,
-    height: 26,
-    marginLeft: 10,
-    marginBottom: 10,
-  },
-  wrapper: {
-    borderRadius: 13,
-    borderColor: '#b2b2b2',
-    borderWidth: 2,
-    flex: 1,
-  },
-  iconText: {
-    color: '#b2b2b2',
-    fontWeight: 'bold',
-    fontSize: 10,
-    backgroundColor: 'transparent',
-    textAlign: 'center',
-  },
-});
-
 export default class CustomActions extends React.Component {
+  constructor() {
+    super();
+  }
+
   /**
   * on action press to show all options to select
   * @function onActionPress
@@ -48,8 +55,7 @@ export default class CustomActions extends React.Component {
     ];
 
     const cancelButtonIndex = options.length - 1;
-    const { actionSheet } = this.context;
-    actionSheet().showActionSheetWithOptions(
+    this.context.actionSheet().showActionSheetWithOptions(
       {
         options,
         cancelButtonIndex,
@@ -57,39 +63,41 @@ export default class CustomActions extends React.Component {
       async (buttonIndex) => {
         switch (buttonIndex) {
           case 0:
+            console.log('user wants to pick an image');
             return this.pickImage();
           case 1:
+            console.log('user wants to take a photo');
             return this.takePhoto();
           case 2:
+            console.log('user wants to get their location');
             return this.getLocation();
           default:
-            return null;
         }
       },
     );
   };
 
   /**
-  * requests image permission and allows to pick image and sends url to uploadImage & sends image
+  * requests image permission and allows to pick image and sends url to uploadImage &amp; sends image
   * @async
   * @function pickImage
   */
   pickImage = async () => {
     try {
       const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-      const { onSend } = this.props;
+
       if (status === 'granted') {
-        const result = await ImagePicker.launchImageLibraryAsync({
+        let result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: 'Images',
-        }).catch((error) => console.error(error));
+        }).catch(error => console.log(error));
 
         if (!result.cancelled) {
           const imageUrl = await this.uploadImage(result.uri);
-          onSend({ image: imageUrl });
+          this.props.onSend({ image: imageUrl });
         }
       }
     } catch (error) {
-      console.error(error.message);
+      console.log(error.message);
     }
   };
 
@@ -104,20 +112,19 @@ export default class CustomActions extends React.Component {
         Permissions.CAMERA,
         Permissions.CAMERA_ROLL,
       );
-      const { onSend } = this.props;
 
       if (status === 'granted') {
         const result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        }).catch((error) => console.error(error));
+        }).catch((error) => console.log(error));
 
         if (!result.cancelled) {
           const imageUrlLink = await this.uploadImage(result.uri);
-          onSend({ image: imageUrlLink });
+          this.props.onSend({ image: imageUrlLink });
         }
       }
     } catch (error) {
-      console.error(error.message);
+      console.log(error.message);
     }
   };
 
@@ -151,9 +158,8 @@ export default class CustomActions extends React.Component {
       blob.close();
       return await snapshot.ref.getDownloadURL();
     } catch (error) {
-      console.error(error.message);
+      console.log(error.message);
     }
-    return null;
   };
 
   /**
@@ -163,12 +169,11 @@ export default class CustomActions extends React.Component {
   */
   getLocation = async () => {
     const { status } = await Permissions.askAsync(Permissions.LOCATION);
-    const { onSend } = this.props;
     if (status === 'granted') {
       try {
         const location = await Location.getCurrentPositionAsync({});
         if (location) {
-          onSend({
+          this.props.onSend({
             location: {
               longitude: location.coords.longitude,
               latitude: location.coords.latitude,
@@ -176,35 +181,73 @@ export default class CustomActions extends React.Component {
           });
         }
       } catch (error) {
-        console.error(error);
+        console.log(error);
       }
     }
   };
 
   render() {
-    const { wrapperStyle, iconTextStyle } = this.props;
     return (
-      <TouchableOpacity
-        accessible
+      &lt;TouchableOpacity
+        accessible={true}
         accessibilityLabel="Click for options"
         accessibilityHint="Let’s you choose to send an image or your geolocation"
         style={[styles.container]}
         onPress={this.onActionPress}
       >
-        <View style={[styles.wrapper, wrapperStyle]}>
-          <Text style={[styles.iconText, iconTextStyle]}>+</Text>
-        </View>
-      </TouchableOpacity>
+        &lt;View style={[styles.wrapper, this.props.wrapperStyle]}>
+          &lt;Text style={[styles.iconText, this.props.iconTextStyle]}>+&lt;/Text>
+        &lt;/View>
+      &lt;/TouchableOpacity>
     );
   }
 }
 
+const styles = StyleSheet.create({
+  container: {
+    width: 26,
+    height: 26,
+    marginLeft: 10,
+    marginBottom: 10,
+  },
+  wrapper: {
+    borderRadius: 13,
+    borderColor: '#b2b2b2',
+    borderWidth: 2,
+    flex: 1,
+  },
+  iconText: {
+    color: '#b2b2b2',
+    fontWeight: 'bold',
+    fontSize: 10,
+    backgroundColor: 'transparent',
+    textAlign: 'center',
+  },
+});
+
 CustomActions.contextTypes = {
   actionSheet: PropTypes.func,
 };
+</code></pre>
+        </article>
+    </section>
 
-CustomActions.propTypes = {
-  onSend: PropTypes.func.isRequired,
-  wrapperStyle: PropTypes.string.isRequired,
-  iconTextStyle: PropTypes.string.isRequired,
-};
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#addMessage">addMessage</a></li><li><a href="global.html#deleteMessages">deleteMessages</a></li><li><a href="global.html#getLocation">getLocation</a></li><li><a href="global.html#getMessages">getMessages</a></li><li><a href="global.html#onActionPress">onActionPress</a></li><li><a href="global.html#onCollectionUpdate">onCollectionUpdate</a></li><li><a href="global.html#onSend">onSend</a></li><li><a href="global.html#pickImage">pickImage</a></li><li><a href="global.html#renderBubble">renderBubble</a></li><li><a href="global.html#renderCustomActions">renderCustomActions</a></li><li><a href="global.html#renderCustomView">renderCustomView</a></li><li><a href="global.html#renderInputToolbar">renderInputToolbar</a></li><li><a href="global.html#saveMessages">saveMessages</a></li><li><a href="global.html#takePhoto">takePhoto</a></li><li><a href="global.html#uploadImage">uploadImage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Sun Dec 13 2020 19:19:54 GMT+0100 (Central European Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
