@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-bind */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable no-underscore-dangle */
@@ -317,10 +318,10 @@ export default class Chat extends React.Component {
         )}
         {/* chat interface */}
         <GiftedChat
-          renderBubble={this.renderBubble(this)}
-          renderInputToolbar={this.renderInputToolbar(this)}
-          renderActions={this.renderCustomActions(this)}
-          renderCustomView={this.renderCustomView(this)}
+          renderBubble={this.renderBubble.bind(this)}
+          renderInputToolbar={this.renderInputToolbar.bind(this)}
+          renderActions={this.renderCustomActions.bind(this)}
+          renderCustomView={this.renderCustomView.bind(this)}
           messages={messages}
           image={image}
           onSend={(messagesToSend) => this.onSend(messagesToSend)}
